@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+	<canvas id="canvas-blended" width="640" height="480"></canvas>
+
+	<script language="JavaScript" src="../lib/main.js"></script>
+	<script language="JavaScript">
+
+	window.onload = function() {
+
+		var canvas = document.getElementById("canvas-blended");
+
+		var ctx=canvas.getContext("2d");
+		ctx.fillStyle ="#FF0000";
+		ctx.strokeStyle ="#00FF00";
+		ctx.lineWidth = 5;
+
+		console.log("Inintializing");
+		var camMotion = CamMotion({
+			canvasBlended: canvas
+		});
+		console.log(camMotion);
+		camMotion.on("error", function(e) {
+			console.log("error", e);
+		});
+		console.log(camMotion);
+		camMotion.on("streamInit", function(e) {
+			console.log("webcam stream initialized", e);
+		});
+		camMotion.on("frame", function() {
+			//console.log("new frame", camMotion.getAverageMovement());
+
+			var point = camMotion.getMovementPoint();
+
+			// draw a circle
+			ctx.beginPath();
+			ctx.arc(point.x, point.y, 20, 0, Math.PI*2, true); 
+			ctx.closePath();
+			if(camMotion.getAverageMovement()>10) {
+				ctx.fill();
+			} else {
+				ctx.stroke();
+			}
+		});
+		camMotion.start();
+
+	};
+	</script>
+</body>
+</html>
