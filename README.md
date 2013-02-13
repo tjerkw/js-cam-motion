@@ -1,32 +1,41 @@
-js-motion-detect
+js-cam-motion
 ================
 
 JavaScript Library for Motion Detection based on WebRTC.
 
-== Idea
+## Why is this cool?
 
-The HTML5 JavaScript spec comes with a getUserMedia function which allows
+You can detect motion from client-side javascript!
+
+* Detect direction of the motion, up, right, down or left movement
+* Get the center point of motion
+
+## How does it work?
+
+The HTML5 JavaScript spec comes with a *getUserMedia* function which allows
 reading camera input data.
 
 Algorithms can be used on top of this data to detect motion,
 and also to detect the direction of motion.
 
+
 This library builds upon that idea and provides
 an easy to use library to listen for motion events.
 
-== Generating Events
+
+The main algorithm used here, is detecting the difference between two camera frames,
+and calculating the location of the most difference, which is the area which contains movement.
+
+## Generating Events
 
 Basically wave your hands, left, right, up or down in order to generate events.
 Note that any object can be used for motion detection, also your head.
 
-
-== Usage
+## Usage
 
 Setup an CamMotion.Engine and start listening for motion detection events.
-N
 
-''
-
+```javascript
 		var camMotion = CamMotion.Engine();
 
 		camMotion.on("error", function (e) {
@@ -50,10 +59,20 @@ N
 		camMotion.onMotion(CamMotion.Detectors.UpMotion, function () {
 			console.log("Up motion detected");
 		});
-''
+```
 
+### Runtime options
 
-== Note
+* timeout
+  The timeout between frames. This is on top of any processing time
+* pixelsToSkip
+  The number of pixels to skip when blending and detecting. Higher numbers make it a lot faster
+* colorDiffTreshold
+  The treshold for which to colors are considered different (colorA - ColorB) > colorDiffTreshold.
+* historyBufferLength
+  The number of previous detection points to remember for recognizing gestures.
+
+## Note
 
 The detection might perform differently on different cameras and under different lightning conditions.
 
