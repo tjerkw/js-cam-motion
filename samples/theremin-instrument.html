@@ -1,0 +1,201 @@
+
+<!DOCTYPE html>
+<html>
+<body>
+
+<h1>Theremin Demo</h1>
+<p>
+	The demo below combines
+</p>
+
+<p>
+	<label for="comboWaveType">Wave type:</label>
+	<select id="comboWaveType">
+		<option value="0" selected="">Sine</option>
+		<option value="1">Square</option>
+		<option value="2">Sawtooth</option>
+		<option value="3">Triangle</option>
+	</select>
+
+</p>
+<p>
+	<label for="checkboxQuantenize">Quantenize notes:</label>
+	<input type="checkbox" id="checkboxQuantenize">
+</p>
+<p>
+	<label for="inputMaxFreq">Max frequency:</label>
+	<input type="input" id="inputMaxFreq" value="500"> Hz
+</p>
+
+<canvas id="canvas-blended" width="640" height="480"></canvas>
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script language="JavaScript" src="../lib/circularbuffer.js"></script>
+<script language="JavaScript" src="../lib/events.js"></script>
+<script language="JavaScript" src="../lib/detectors.js"></script>
+<script language="JavaScript" src="../lib/main.js"></script>
+<script language="JavaScript">
+
+	// harmonic note functions
+
+	// gets the frequency of a note, in which a note is an integer
+	function getNoteFreq(note) {
+		return 440 * Math.pow(2, (note / 12));
+	}
+
+	var log2 = Math.log(2);
+	// gets the number of a note
+	function getClosestNote(freq) {
+		return Math.ceil(Math.log(freq / 440) / log2 * 12);
+	}
+
+	function quantenizeFreqToNote(freq) {
+		return getNoteFreq(getClosestNote(freq));
+	}
+
+	function createAudioContext() {
+		var context;
+		if (typeof AudioContext !== "undefined") {
+			context = new AudioContext();
+		} else if (typeof webkitAudioContext !== "undefined") {
+			context = new webkitAudioContext();
+		} else {
+			throw new Error('AudioContext not supported. :(');
+		}
+		return context;
+	}
+
+	function Oscillator() {
+		var context = createAudioContext();
+		var oscillator = context.createOscillator();
+		// Create a volume (gain) node
+		var volumeNode = context.createGainNode();
+
+		function setWaveType(type) {
+			oscillator.type = type;
+		}
+
+		function setFrequency(freq) {
+			oscillator.frequency.value = freq;
+
+		}
+
+		function getVolume() {
+			return volumeNode.gain.value;
+		}
+
+		function setVolume(vol) {
+			volumeNode.gain.value = vol;
+		}
+
+		function connect() {
+			oscillator.connect(volumeNode);
+			volumeNode.connect(context.destination);
+			oscillator.noteOn && oscillator.noteOn(0);
+			// this method doesn't seem to exist, though it's in the docs?
+		}
+
+		function disconnect() {
+			oscillator.disconnect();
+		}
+
+		return {
+			setWaveType: setWaveType,
+			setFrequency: setFrequency,
+			getVolume: getVolume,
+			setVolume: setVolume,
+			connect: connect,
+			disconnect: disconnect
+		};
+	}
+
+	function Settings(osc) {
+		var props = {
+			quantenize: false,
+			maxFrequency: 0
+		};
+
+		var comboBox =  $("#comboWaveType");
+		var quantenizeCheckbox =  $("#checkboxQuantenize");
+		var maxFreqInput =  $("#inputMaxFreq");
+
+		function updateOsc() {
+			osc.setWaveType(parseInt(comboBox.val(), 10));
+			props.quantenize = quantenizeCheckbox.is(":checked");
+			props.maxFrequency = parseInt(maxFreqInput.val(), 10);
+		}
+
+		comboBox.bind("change", updateOsc);
+		maxFreqInput.bind("change", updateOsc);
+
+		// init values
+		updateOsc();
+
+		// expose settings
+		return props;
+	}
+
+	$(function () {
+
+		var osc = Oscillator();
+		var settings = Settings(osc);
+
+
+		var canvas = document.getElementById("canvas-blended");
+
+		var ctx = canvas.getContext("2d");
+		ctx.fillStyle = "#FF0000";
+		ctx.strokeStyle = "#00FF00";
+		ctx.lineWidth = 5;
+
+		console.log("Inintializing");
+		var camMotion = CamMotion.Engine({
+			canvasBlended: canvas,
+			pixelsToSkip: 21, // makes it a lot faster
+			timeout: 80 // dont overload the cpu
+		});
+		camMotion.on("streamInit", osc.connect);
+		camMotion.on("error", function (e) {
+
+			osc.disconnect();
+			alert("Could not connect the webcam: " +e.msg);
+		});
+		camMotion.on("frame", function () {
+
+			var point = camMotion.getMovementPoint();
+			drawPoint(point);
+
+			var movementArea = 200;
+			var movementTreshold = 2;
+			var avgMovement = camMotion.getAverageMovement(
+				point.x-movementArea/2,
+				point.y-movementArea/2,
+				movementArea,
+				movementArea
+			);
+			if (avgMovement>movementTreshold) {
+				var freq = point.x / canvas.width * settings.maxFrequency;
+				if (settings.quantenize) {
+					freq = getNoteFreq(getClosestNote(point.x * 3));
+				}
+				osc.setFrequency(freq);
+				osc.setVolume(1 - (point.y / canvas.height));
+
+			} else {
+				osc.setVolume(osc.getVolume() - osc.getVolume()/5);
+			}
+		});
+		camMotion.start();
+
+
+
+		function drawPoint(point) {
+			ctx.beginPath();
+			ctx.arc(point.x, point.y, 20, 0, Math.PI*2, true);
+			ctx.closePath();
+		}
+
+	});
+</script>
+</body>
+</html>
