@@ -1,11 +1,13 @@
-
 <!DOCTYPE html>
-<html>
+<html xmlns="http://www.w3.org/1999/html">
+<head><title>js-cam-motion: Theremin Demo</title></head>
 <body>
 
 <h1>Theremin Demo</h1>
 <p>
-	The demo below combines
+	The demo below combines js-cam-motion together with the
+	<a href="https://dvcs.w3.org/hg/audio/raw-file/tip/webaudio/specification.html">Web Audio API</a
+	to generate a <a href=="http://nl.wikipedia.org/wiki/Theremin">theremin<a/>.
 </p>
 
 <p>
@@ -20,11 +22,13 @@
 </p>
 <p>
 	<label for="checkboxQuantenize">Quantenize notes:</label>
-	<input type="checkbox" id="checkboxQuantenize">
+	<input type="checkbox" id="checkboxQuantenize" checked>
 </p>
 <p>
-	<label for="inputMaxFreq">Max frequency:</label>
-	<input type="input" id="inputMaxFreq" value="500"> Hz
+	<label for="inputMaxFreq">Frequency range:</label>
+
+	Min <input type="input" id="inputMinFreq" value="220"> Hz -
+	Max <input type="input" id="inputMaxFreq" value="440"> Hz
 </p>
 
 <canvas id="canvas-blended" width="640" height="480"></canvas>
@@ -40,13 +44,19 @@
 
 	// gets the frequency of a note, in which a note is an integer
 	function getNoteFreq(note) {
-		return 440 * Math.pow(2, (note / 12));
+		return 440 * Math.pow(2, ((note - 49 )/ 12));
 	}
 
 	var log2 = Math.log(2);
+	var skipNotes = [2, 5, 7, 70]
 	// gets the number of a note
 	function getClosestNote(freq) {
-		return Math.ceil(Math.log(freq / 440) / log2 * 12);
+		var note = Math.ceil(Math.log(freq / 440) / log2 * 12 + 49);
+		if ( (note % 12) in skipNotes) {
+			note --;
+		}
+		console.log(note)
+		return note;
 	}
 
 	function quantenizeFreqToNote(freq) {
@@ -117,15 +127,20 @@
 
 		var comboBox =  $("#comboWaveType");
 		var quantenizeCheckbox =  $("#checkboxQuantenize");
+		var minFreqInput = $("#inputMinFreq");
 		var maxFreqInput =  $("#inputMaxFreq");
 
 		function updateOsc() {
 			osc.setWaveType(parseInt(comboBox.val(), 10));
 			props.quantenize = quantenizeCheckbox.is(":checked");
+			props.minFrequency = parseInt(minFreqInput.val(), 10);
 			props.maxFrequency = parseInt(maxFreqInput.val(), 10);
 		}
 
 		comboBox.bind("change", updateOsc);
+		quantenizeCheckbox.bind("change", updateOsc);
+
+		minFreqInput.bind("change", updateOsc);
 		maxFreqInput.bind("change", updateOsc);
 
 		// init values
@@ -152,7 +167,7 @@
 		var camMotion = CamMotion.Engine({
 			canvasBlended: canvas,
 			pixelsToSkip: 21, // makes it a lot faster
-			timeout: 80 // dont overload the cpu
+			timeout: 280 // dont overload the cpu
 		});
 		camMotion.on("streamInit", osc.connect);
 		camMotion.on("error", function (e) {
@@ -174,9 +189,13 @@
 				movementArea
 			);
 			if (avgMovement>movementTreshold) {
-				var freq = point.x / canvas.width * settings.maxFrequency;
+				var freq = settings.minFrequency
+						+ (point.x / canvas.width)
+						* (settings.maxFrequency - settings.minFrequency)
+				;
 				if (settings.quantenize) {
-					freq = getNoteFreq(getClosestNote(point.x * 3));
+					//console.log("quantenize to", freq, quantenizeFreqToNote(freq));
+					freq = quantenizeFreqToNote(freq);
 				}
 				osc.setFrequency(freq);
 				osc.setVolume(1 - (point.y / canvas.height));
