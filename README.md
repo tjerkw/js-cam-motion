@@ -82,7 +82,6 @@ Is it really not working? Raise an issue and report your camera used and your en
 ## Acknowledgments
 
 * [TjerkWolterink] (http://about.me/tjerkw), about me (https://github.com/tjerkw), my linked in (http://www.linkedin.com/in/tjerkwolterink)
-* [Udinic] (https://github.com/Udinic/SmallExamples/tree/master/ExpandAnimationExample), his blog (http://udinic.wordpress.com/2011/09/03/expanding-listview-items/) contains the initial idea
 
 ## License
 
