@@ -10,6 +10,10 @@ You can detect motion from client-side javascript!
 * Detect direction of the motion, up, right, down or left movement
 * Get the center point of motion
 
+## Demo Video
+
+[![ScreenShot](https://raw.github.com/tjerkw/js-cam-motion/master/resources/demo-video.png)](http://youtu.be/ZnxGtNmgH_8)
+
 ## How does it work?
 
 The HTML5 JavaScript spec comes with a *getUserMedia* function which allows
