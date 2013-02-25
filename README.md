@@ -77,3 +77,15 @@ Setup an CamMotion.Engine and start listening for motion detection events.
 The detection might perform differently on different cameras and under different lightning conditions.
 
 Is it really not working? Raise an issue and report your camera used and your environment (lightning conditions).
+
+
+## Acknowledgments
+
+* [TjerkWolterink] (http://about.me/tjerkw), about me (https://github.com/tjerkw), my linked in (http://www.linkedin.com/in/tjerkwolterink)
+* [Udinic] (https://github.com/Udinic/SmallExamples/tree/master/ExpandAnimationExample), his blog (http://udinic.wordpress.com/2011/09/03/expanding-listview-items/) contains the initial idea
+
+## License
+
+Licensed under the [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.html)
+
+[![githalytics.com alpha](https://cruel-carlota.pagodabox.com/5a8c351ee05d1a2fb0c27983ecade8ec "githalytics.com")](http://githalytics.com/tjerkw/js-cam-motion)
